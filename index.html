@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Invoice Generator</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+body{
+font-family:Arial;
+max-width:900px;
+margin:auto;
+padding:20px;
+}
+
+input{
+width:100%;
+padding:8px;
+margin-bottom:10px;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+margin-top:20px;
+}
+
+td,th{
+border:1px solid #ccc;
+padding:8px;
+}
+
+button{
+padding:10px 20px;
+margin-top:10px;
+}
+</style>
+</head>
+
+<body>
+
+<h2>Create Invoice</h2>
+
+<input id="customer" placeholder="Customer">
+
+<input id="ice" placeholder="ICE">
+
+<input id="address" placeholder="Address">
+
+<input id="contact" placeholder="Contact">
+
+<h3>Products</h3>
+
+<table id="products">
+<tr>
+<th>Product</th>
+<th>Qty</th>
+<th>Unit Price</th>
+</tr>
+</table>
+
+<button onclick="addRow()">Add Product</button>
+
+<br><br>
+
+<button onclick="generatePDF()">
+Generate PDF
+</button>
+
+<script>
+
+function addRow(){
+
+const table =
+document.getElementById("products");
+
+const row =
+table.insertRow();
+
+row.innerHTML=`
+<td><input></td>
+<td><input type="number"></td>
+<td><input type="number"></td>
+`;
+}
+
+addRow();
+
+function generatePDF(){
+
+const { jsPDF } = window.jspdf;
+
+const doc = new jsPDF();
+
+let y=20;
+
+doc.setFontSize(18);
+doc.text("FACTURE",90,y);
+
+y+=20;
+
+doc.setFontSize(12);
+
+doc.text(
+"Client : "+
+document.getElementById("customer").value,
+20,y);
+
+y+=10;
+
+doc.text(
+"ICE : "+
+document.getElementById("ice").value,
+20,y);
+
+y+=10;
+
+doc.text(
+"Adresse : "+
+document.getElementById("address").value,
+20,y);
+
+y+=10;
+
+doc.text(
+"Contact : "+
+document.getElementById("contact").value,
+20,y);
+
+y+=20;
+
+let subtotal=0;
+
+const rows =
+document.querySelectorAll(
+"#products tr"
+);
+
+for(let i=1;i<rows.length;i++){
+
+const inputs=
+rows[i].querySelectorAll("input");
+
+const product=
+inputs[0].value;
+
+const qty=
+Number(inputs[1].value);
+
+const price=
+Number(inputs[2].value);
+
+const total=
+qty*price;
+
+subtotal+=total;
+
+doc.text(
+product+
+" | "+qty+
+" | "+price+
+" | "+total,
+20,y);
+
+y+=10;
+}
+
+const tva=
+subtotal*0.20;
+
+const ttc=
+subtotal+tva;
+
+y+=20;
+
+doc.text(
+"HT : "+subtotal.toFixed(2),
+20,y);
+
+y+=10;
+
+doc.text(
+"TVA : "+tva.toFixed(2),
+20,y);
+
+y+=10;
+
+doc.text(
+"TTC : "+ttc.toFixed(2),
+20,y);
+
+doc.save("invoice.pdf");
+}
+
+</script>
+
+</body>
+</html>
