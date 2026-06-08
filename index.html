@@ -1,68 +1,133 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
+
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Invoice Generator</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 
 <style>
+
 body{
-font-family:Arial;
-max-width:900px;
+font-family:Arial,sans-serif;
+max-width:1000px;
 margin:auto;
 padding:20px;
+}
+
+h1{
+text-align:center;
 }
 
 input{
 width:100%;
 padding:8px;
-margin-bottom:10px;
+box-sizing:border-box;
 }
 
 table{
 width:100%;
 border-collapse:collapse;
-margin-top:20px;
+margin-top:15px;
 }
 
-td,th{
-border:1px solid #ccc;
+th,td{
+border:1px solid #ddd;
 padding:8px;
 }
 
 button{
-padding:10px 20px;
+padding:10px 15px;
 margin-top:10px;
+cursor:pointer;
 }
+
+.summary{
+margin-top:20px;
+font-size:18px;
+}
+
+.summary div{
+margin-top:5px;
+}
+
+.remove-btn{
+background:#d9534f;
+color:white;
+border:none;
+padding:5px 10px;
+}
+
 </style>
 </head>
 
 <body>
 
-<h2>Create Invoice</h2>
+<h1>Create Invoice</h1>
 
-<input id="customer" placeholder="Customer">
+<h3>Customer Information</h3>
+
+<input id="customer" placeholder="Customer Name">
+
+<br><br>
 
 <input id="ice" placeholder="ICE">
 
+<br><br>
+
 <input id="address" placeholder="Address">
+
+<br><br>
 
 <input id="contact" placeholder="Contact">
 
 <h3>Products</h3>
 
-<table id="products">
+<table id="productsTable">
+
+<thead>
 <tr>
 <th>Product</th>
 <th>Qty</th>
 <th>Unit Price</th>
+<th>Total</th>
+<th></th>
 </tr>
+</thead>
+
+<tbody id="productsBody">
+</tbody>
+
 </table>
 
-<button onclick="addRow()">Add Product</button>
+<button onclick="addRow()">
++ Add Product
+</button>
 
-<br><br>
+<div class="summary">
+
+<div>
+HT :
+<span id="subtotal">0.00</span> DH
+</div>
+
+<div>
+TVA (20%) :
+<span id="tax">0.00</span> DH
+</div>
+
+<div>
+TTC :
+<span id="total">0.00</span> DH
+</div>
+
+</div>
+
+<br>
 
 <button onclick="generatePDF()">
 Generate PDF
@@ -70,130 +135,321 @@ Generate PDF
 
 <script>
 
+const COMPANY = {
+name:"PAPIER THERMIQUE MAROC SARL",
+ice:"001234567890",
+address:"Your Address",
+contact:"0600000000"
+};
+
+function getInvoiceNumber(){
+
+let last =
+localStorage.getItem("lastInvoice") || 0;
+
+last++;
+
+localStorage.setItem(
+"lastInvoice",
+last
+);
+
+return "INV-" +
+new Date().getFullYear() +
+"-" +
+String(last).padStart(4,"0");
+
+}
+
 function addRow(){
 
-const table =
-document.getElementById("products");
+const tbody =
+document.getElementById("productsBody");
 
 const row =
-table.insertRow();
+document.createElement("tr");
 
-row.innerHTML=`
-<td><input></td>
-<td><input type="number"></td>
-<td><input type="number"></td>
+row.innerHTML = `
+<td>
+<input class="product">
+</td>
+
+<td>
+<input type="number"
+class="qty"
+value="1"
+oninput="updateTotals()">
+</td>
+
+<td>
+<input type="number"
+class="price"
+value="0"
+step="0.01"
+oninput="updateTotals()">
+</td>
+
+<td class="lineTotal">
+0.00
+</td>
+
+<td>
+<button
+class="remove-btn"
+onclick="removeRow(this)">
+X
+</button>
+</td>
 `;
+
+tbody.appendChild(row);
+
+updateTotals();
+}
+
+function removeRow(button){
+
+button.closest("tr").remove();
+
+updateTotals();
+
+}
+
+function updateTotals(){
+
+let subtotal = 0;
+
+document
+.querySelectorAll("#productsBody tr")
+.forEach(row=>{
+
+const qty =
+Number(
+row.querySelector(".qty").value
+);
+
+const price =
+Number(
+row.querySelector(".price").value
+);
+
+const total =
+qty * price;
+
+row.querySelector(".lineTotal")
+.innerText =
+total.toFixed(2);
+
+subtotal += total;
+
+});
+
+const tax =
+subtotal * 0.20;
+
+const grandTotal =
+subtotal + tax;
+
+document.getElementById(
+"subtotal"
+).innerText =
+subtotal.toFixed(2);
+
+document.getElementById(
+"tax"
+).innerText =
+tax.toFixed(2);
+
+document.getElementById(
+"total"
+).innerText =
+grandTotal.toFixed(2);
+
+}
+
+function generatePDF(){
+
+updateTotals();
+
+const { jsPDF } =
+window.jspdf;
+
+const doc =
+new jsPDF();
+
+const invoiceNo =
+getInvoiceNumber();
+
+const today =
+new Date().toLocaleDateString();
+
+doc.setFontSize(18);
+doc.text("FACTURE",90,20);
+
+doc.setFontSize(11);
+
+doc.text(
+COMPANY.name,
+20,
+40
+);
+
+doc.text(
+"ICE : " + COMPANY.ice,
+20,
+48
+);
+
+doc.text(
+"Adresse : " + COMPANY.address,
+20,
+56
+);
+
+doc.text(
+"Contact : " + COMPANY.contact,
+20,
+64
+);
+
+doc.text(
+"Facture N° : " + invoiceNo,
+130,
+40
+);
+
+doc.text(
+"Date : " + today,
+130,
+48
+);
+
+doc.text(
+"Client : " +
+document.getElementById("customer").value,
+20,
+80
+);
+
+doc.text(
+"ICE : " +
+document.getElementById("ice").value,
+20,
+88
+);
+
+doc.text(
+"Adresse : " +
+document.getElementById("address").value,
+20,
+96
+);
+
+doc.text(
+"Contact : " +
+document.getElementById("contact").value,
+20,
+104
+);
+
+const rows = [];
+
+let subtotal = 0;
+
+document
+.querySelectorAll("#productsBody tr")
+.forEach(row=>{
+
+const product =
+row.querySelector(".product").value;
+
+const qty =
+Number(
+row.querySelector(".qty").value
+);
+
+const price =
+Number(
+row.querySelector(".price").value
+);
+
+const total =
+qty * price;
+
+subtotal += total;
+
+rows.push([
+product,
+qty,
+price.toFixed(2),
+total.toFixed(2)
+]);
+
+});
+
+doc.autoTable({
+
+startY:115,
+
+head:[[
+"Produit",
+"Quantité",
+"Prix Unitaire",
+"Total HT"
+]],
+
+body:rows
+
+});
+
+const tax =
+subtotal * 0.20;
+
+const ttc =
+subtotal + tax;
+
+let y =
+doc.lastAutoTable.finalY + 15;
+
+doc.text(
+"Montant HT : " +
+subtotal.toFixed(2) +
+" DH",
+130,
+y
+);
+
+y += 10;
+
+doc.text(
+"TVA (20%) : " +
+tax.toFixed(2) +
+" DH",
+130,
+y
+);
+
+y += 10;
+
+doc.text(
+"Montant TTC : " +
+ttc.toFixed(2) +
+" DH",
+130,
+y
+);
+
+window.open(
+doc.output("bloburl"),
+"_blank"
+);
+
 }
 
 addRow();
 
-function generatePDF(){
-
-const { jsPDF } = window.jspdf;
-
-const doc = new jsPDF();
-
-let y=20;
-
-doc.setFontSize(18);
-doc.text("FACTURE",90,y);
-
-y+=20;
-
-doc.setFontSize(12);
-
-doc.text(
-"Client : "+
-document.getElementById("customer").value,
-20,y);
-
-y+=10;
-
-doc.text(
-"ICE : "+
-document.getElementById("ice").value,
-20,y);
-
-y+=10;
-
-doc.text(
-"Adresse : "+
-document.getElementById("address").value,
-20,y);
-
-y+=10;
-
-doc.text(
-"Contact : "+
-document.getElementById("contact").value,
-20,y);
-
-y+=20;
-
-let subtotal=0;
-
-const rows =
-document.querySelectorAll(
-"#products tr"
-);
-
-for(let i=1;i<rows.length;i++){
-
-const inputs=
-rows[i].querySelectorAll("input");
-
-const product=
-inputs[0].value;
-
-const qty=
-Number(inputs[1].value);
-
-const price=
-Number(inputs[2].value);
-
-const total=
-qty*price;
-
-subtotal+=total;
-
-doc.text(
-product+
-" | "+qty+
-" | "+price+
-" | "+total,
-20,y);
-
-y+=10;
-}
-
-const tva=
-subtotal*0.20;
-
-const ttc=
-subtotal+tva;
-
-y+=20;
-
-doc.text(
-"HT : "+subtotal.toFixed(2),
-20,y);
-
-y+=10;
-
-doc.text(
-"TVA : "+tva.toFixed(2),
-20,y);
-
-y+=10;
-
-doc.text(
-"TTC : "+ttc.toFixed(2),
-20,y);
-
-doc.save("invoice.pdf");
-}
-
 </script>
 
 </body>
+
 </html>
