@@ -19,7 +19,7 @@ button{ padding:10px 15px; margin-top:10px; cursor:pointer; }
 </style>
 </head>
 <body>
-
+<img id="logo" src="logo.png" style="width: 150px; display: block; margin: 0 auto;">
 <h1>Create Invoice</h1>
 
 <div class="section">
@@ -137,26 +137,50 @@ function updateTotals(){
 function generatePDF(){
     saveCustomer();
     updateTotals();
+    
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
+
+    const logo = document.getElementById("logo");
+
+    // Add logo (we use a small timeout to ensure the image is ready)
+    if (logo) {
+        // We convert the image to base64 to ensure it renders correctly in PDF
+        const canvas = document.createElement("canvas");
+        canvas.width = logo.naturalWidth;
+        canvas.height = logo.naturalHeight;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(logo, 0, 0);
+        const dataURL = canvas.toDataURL("image/png");
+        
+        doc.addImage(dataURL, "PNG", 15, 10, 40, 40);
+    }
+
     const invoiceNo = getInvoiceNumber();
     const today = new Date().toLocaleDateString();
     const company = JSON.parse(localStorage.getItem("company")) || {};
 
+    // Title and Info
     doc.setFontSize(18);
     doc.text("FACTURE", 105, 20, { align: "center" });
     doc.setFontSize(11);
-    doc.text(company.name || "", 20, 55);
-    doc.text("ICE : " + (company.ice || ""), 20, 63);
-    doc.text("Adresse : " + (company.address || ""), 20, 71);
-    doc.text("Contact : " + (company.contact || ""), 20, 79);
-    doc.text("Facture N° : " + invoiceNo, 130, 55);
-    doc.text("Date : " + today, 130, 63);
-    doc.text("Client : " + document.getElementById("customer").value, 20, 95);
-    doc.text("ICE : " + document.getElementById("ice").value, 20, 103);
-    doc.text("Adresse : " + document.getElementById("address").value, 20, 111);
-    doc.text("Contact : " + document.getElementById("contact").value, 20, 119);
+    
+    // Positioned beside/below the logo area
+    doc.text(company.name || "", 20, 60);
+    doc.text("ICE : " + (company.ice || ""), 20, 68);
+    doc.text("Adresse : " + (company.address || ""), 20, 76);
+    doc.text("Contact : " + (company.contact || ""), 20, 84);
 
+    doc.text("Facture N° : " + invoiceNo, 130, 60);
+    doc.text("Date : " + today, 130, 68);
+
+    // Customer Info
+    doc.text("Client : " + document.getElementById("customer").value, 20, 105);
+    doc.text("ICE : " + document.getElementById("ice").value, 20, 113);
+    doc.text("Adresse : " + document.getElementById("address").value, 20, 121);
+    doc.text("Contact : " + document.getElementById("contact").value, 20, 129);
+
+    // Table
     const rows = [];
     let subtotal = 0;
     document.querySelectorAll("#productsBody tr").forEach(row => {
@@ -168,16 +192,19 @@ function generatePDF(){
         rows.push([product, qty, price.toFixed(2), total.toFixed(2)]);
     });
 
-    doc.autoTable({ startY: 130, head: [["Produit", "Quantité", "Prix Unitaire", "Total HT"]], body: rows });
+    doc.autoTable({ startY: 140, head: [["Produit", "Quantité", "Prix Unitaire", "Total HT"]], body: rows });
 
+    // Summary
     const tax = subtotal * 0.20;
     const ttc = subtotal + tax;
     let y = doc.lastAutoTable.finalY + 15;
+    
     doc.text("Montant HT : " + subtotal.toFixed(2) + " DH", 130, y);
     y += 10;
     doc.text("TVA (20%) : " + tax.toFixed(2) + " DH", 130, y);
     y += 10;
     doc.text("Montant TTC : " + ttc.toFixed(2) + " DH", 130, y);
+    
     doc.save(`Facture-${invoiceNo}.pdf`);
 }
 
