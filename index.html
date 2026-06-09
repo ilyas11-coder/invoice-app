@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="fr">
-
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,176 +10,108 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 
 <style>
-
 body{
-font-family:Arial,sans-serif;
-max-width:1000px;
-margin:auto;
-padding:20px;
+    font-family:Arial,sans-serif;
+    max-width:1000px;
+    margin:auto;
+    padding:20px;
 }
 
 h1{
-text-align:center;
+    text-align:center;
 }
 
 input{
-width:100%;
-padding:8px;
-box-sizing:border-box;
+    width:100%;
+    padding:8px;
+    box-sizing:border-box;
 }
 
 table{
-width:100%;
-border-collapse:collapse;
-margin-top:15px;
+    width:100%;
+    border-collapse:collapse;
+    margin-top:15px;
 }
 
 th,td{
-border:1px solid #ddd;
-padding:8px;
+    border:1px solid #ddd;
+    padding:8px;
 }
 
 button{
-padding:10px 15px;
-margin-top:10px;
-cursor:pointer;
+    padding:10px 15px;
+    margin-top:10px;
+    cursor:pointer;
 }
 
 .summary{
-margin-top:20px;
-font-size:18px;
+    margin-top:20px;
+    font-size:18px;
 }
 
 .summary div{
-margin-top:5px;
+    margin-top:5px;
 }
 
 .remove-btn{
-background:#d9534f;
-color:white;
-border:none;
-padding:5px 10px;
+    background:#d9534f;
+    color:white;
+    border:none;
+    padding:5px 10px;
 }
 
+.section{
+    margin-bottom:25px;
+}
 </style>
 </head>
 
 <body>
-  <img id="logo" src="logo.png" style="display:none;">
 
 <h1>Create Invoice</h1>
-  <h3>Company Information</h3>
+
+<!-- COMPANY -->
+<div class="section">
+<h3>Company Information</h3>
 
 <input id="companyName" placeholder="Company Name">
+<br><br>
+
 <input id="companyIce" placeholder="ICE">
+<br><br>
+
 <input id="companyAddress" placeholder="Address">
+<br><br>
+
 <input id="companyContact" placeholder="Contact">
+<br>
 
 <button onclick="saveCompany()">
 Save Company Settings
 </button>
-  function saveCompany() {
+</div>
 
-  localStorage.setItem(
-    "company",
-    JSON.stringify({
-      name: document.getElementById("companyName").value,
-      ice: document.getElementById("companyIce").value,
-      address: document.getElementById("companyAddress").value,
-      contact: document.getElementById("companyContact").value
-    })
-  );
-
-  alert("Company saved");
-}
-
-function loadCompany() {
-
-  const company =
-    JSON.parse(
-      localStorage.getItem("company")
-    );
-
-  if(!company) return;
-
-  document.getElementById("companyName").value = company.name || "";
-  document.getElementById("companyIce").value = company.ice || "";
-  document.getElementById("companyAddress").value = company.address || "";
-  document.getElementById("companyContact").value = company.contact || "";
-}
-  loadCompany();
-  
-
+<!-- CUSTOMER -->
+<div class="section">
 <h3>Customer Information</h3>
 
 <input list="customers" id="customer" placeholder="Customer Name">
-
 <datalist id="customers"></datalist>
-  function saveCustomer() {
-
-  const customer = {
-    name: document.getElementById("customer").value,
-    ice: document.getElementById("ice").value,
-    address: document.getElementById("address").value,
-    contact: document.getElementById("contact").value
-  };
-
-  let customers =
-    JSON.parse(
-      localStorage.getItem("customers")
-    ) || [];
-
-  const exists =
-    customers.some(
-      c => c.name === customer.name
-    );
-
-  if(!exists){
-    customers.push(customer);
-
-    localStorage.setItem(
-      "customers",
-      JSON.stringify(customers)
-    );
-  }
-}
-  function loadCustomers() {
-
-  const list =
-    document.getElementById("customers");
-
-  list.innerHTML = "";
-
-  const customers =
-    JSON.parse(
-      localStorage.getItem("customers")
-    ) || [];
-
-  customers.forEach(c => {
-
-    const option =
-      document.createElement("option");
-
-    option.value = c.name;
-
-    list.appendChild(option);
-  });
-}
-  loadCustomers();
-  
 
 <br><br>
 
-<input id="ice" placeholder="ICE">
+<input id="ice" placeholder="Customer ICE">
 
 <br><br>
 
-<input id="address" placeholder="Address">
+<input id="address" placeholder="Customer Address">
 
 <br><br>
 
-<input id="contact" placeholder="Contact">
+<input id="contact" placeholder="Customer Contact">
+</div>
 
+<!-- PRODUCTS -->
 <h3>Products</h3>
 
 <table id="productsTable">
@@ -195,8 +126,7 @@ function loadCompany() {
 </tr>
 </thead>
 
-<tbody id="productsBody">
-</tbody>
+<tbody id="productsBody"></tbody>
 
 </table>
 
@@ -231,331 +161,459 @@ Generate PDF
 
 <script>
 
-const COMPANY = {
-name:"PAPIER THERMIQUE MAROC SARL",
-ice:"001234567890",
-address:"Your Address",
-contact:"0600000000"
-};
+/* =========================
+   COMPANY FUNCTIONS
+========================= */
+
+function saveCompany(){
+
+    const company = {
+        name: document.getElementById("companyName").value,
+        ice: document.getElementById("companyIce").value,
+        address: document.getElementById("companyAddress").value,
+        contact: document.getElementById("companyContact").value
+    };
+
+    localStorage.setItem(
+        "company",
+        JSON.stringify(company)
+    );
+
+    alert("Company information saved.");
+}
+
+function loadCompany(){
+
+    const company =
+        JSON.parse(
+            localStorage.getItem("company")
+        );
+
+    if(!company) return;
+
+    document.getElementById("companyName").value =
+        company.name || "";
+
+    document.getElementById("companyIce").value =
+        company.ice || "";
+
+    document.getElementById("companyAddress").value =
+        company.address || "";
+
+    document.getElementById("companyContact").value =
+        company.contact || "";
+}
+
+/* =========================
+   CUSTOMER FUNCTIONS
+========================= */
+
+function saveCustomer(){
+
+    const customer = {
+        name: document.getElementById("customer").value,
+        ice: document.getElementById("ice").value,
+        address: document.getElementById("address").value,
+        contact: document.getElementById("contact").value
+    };
+
+    if(customer.name.trim() === "")
+        return;
+
+    let customers =
+        JSON.parse(
+            localStorage.getItem("customers")
+        ) || [];
+
+    const exists =
+        customers.some(
+            c => c.name.toLowerCase() === customer.name.toLowerCase()
+        );
+
+    if(!exists){
+
+        customers.push(customer);
+
+        localStorage.setItem(
+            "customers",
+            JSON.stringify(customers)
+        );
+    }
+
+    loadCustomers();
+}
+
+function loadCustomers(){
+
+    const list =
+        document.getElementById("customers");
+
+    list.innerHTML = "";
+
+    const customers =
+        JSON.parse(
+            localStorage.getItem("customers")
+        ) || [];
+
+    customers.forEach(c => {
+
+        const option =
+            document.createElement("option");
+
+        option.value = c.name;
+
+        list.appendChild(option);
+
+    });
+}
+
+document.getElementById("customer").addEventListener(
+    "change",
+    function(){
+
+        const selected = this.value;
+
+        const customers =
+            JSON.parse(
+                localStorage.getItem("customers")
+            ) || [];
+
+        const customer =
+            customers.find(
+                c => c.name === selected
+            );
+
+        if(!customer) return;
+
+        document.getElementById("ice").value =
+            customer.ice || "";
+
+        document.getElementById("address").value =
+            customer.address || "";
+
+        document.getElementById("contact").value =
+            customer.contact || "";
+    }
+);
+
+/* =========================
+   INVOICE NUMBER
+========================= */
 
 function getInvoiceNumber(){
 
-let last =
-localStorage.getItem("lastInvoice") || 0;
+    let last =
+        parseInt(
+            localStorage.getItem("lastInvoice") || "0"
+        );
 
-last++;
+    last++;
 
-localStorage.setItem(
-"lastInvoice",
-last
-);
+    localStorage.setItem(
+        "lastInvoice",
+        last
+    );
 
-return "INV-" +
-new Date().getFullYear() +
-"-" +
-String(last).padStart(4,"0");
-
+    return "INV-" +
+        new Date().getFullYear() +
+        "-" +
+        String(last).padStart(4,"0");
 }
+
+/* =========================
+   PRODUCTS
+========================= */
 
 function addRow(){
 
-const tbody =
-document.getElementById("productsBody");
+    const tbody =
+        document.getElementById("productsBody");
 
-const row =
-document.createElement("tr");
+    const row =
+        document.createElement("tr");
 
-row.innerHTML = `
-<td>
-<input class="product">
-</td>
+    row.innerHTML = `
+        <td>
+            <input class="product">
+        </td>
 
-<td>
-<input type="number"
-class="qty"
-value="1"
-oninput="updateTotals()">
-</td>
+        <td>
+            <input
+                type="number"
+                class="qty"
+                value="1"
+                min="1"
+                oninput="updateTotals()">
+        </td>
 
-<td>
-<input type="number"
-class="price"
-value="0"
-step="0.01"
-oninput="updateTotals()">
-</td>
+        <td>
+            <input
+                type="number"
+                class="price"
+                value="0"
+                step="0.01"
+                oninput="updateTotals()">
+        </td>
 
-<td class="lineTotal">
-0.00
-</td>
+        <td class="lineTotal">
+            0.00
+        </td>
 
-<td>
-<button
-class="remove-btn"
-onclick="removeRow(this)">
-X
-</button>
-</td>
-`;
+        <td>
+            <button
+                class="remove-btn"
+                onclick="removeRow(this)">
+                X
+            </button>
+        </td>
+    `;
 
-tbody.appendChild(row);
+    tbody.appendChild(row);
 
-updateTotals();
+    updateTotals();
 }
 
-function removeRow(button){
+function removeRow(btn){
 
-button.closest("tr").remove();
+    btn.closest("tr").remove();
 
-updateTotals();
-
+    updateTotals();
 }
 
 function updateTotals(){
 
-let subtotal = 0;
+    let subtotal = 0;
 
-document
-.querySelectorAll("#productsBody tr")
-.forEach(row=>{
+    document
+        .querySelectorAll("#productsBody tr")
+        .forEach(row => {
 
-const qty =
-Number(
-row.querySelector(".qty").value
-);
+            const qty =
+                Number(
+                    row.querySelector(".qty").value
+                );
 
-const price =
-Number(
-row.querySelector(".price").value
-);
+            const price =
+                Number(
+                    row.querySelector(".price").value
+                );
 
-const total =
-qty * price;
+            const total =
+                qty * price;
 
-row.querySelector(".lineTotal")
-.innerText =
-total.toFixed(2);
+            row.querySelector(".lineTotal").innerText =
+                total.toFixed(2);
 
-subtotal += total;
+            subtotal += total;
+        });
 
-});
+    const tax =
+        subtotal * 0.20;
 
-const tax =
-subtotal * 0.20;
+    const grandTotal =
+        subtotal + tax;
 
-const grandTotal =
-subtotal + tax;
+    document.getElementById("subtotal").innerText =
+        subtotal.toFixed(2);
 
-document.getElementById(
-"subtotal"
-).innerText =
-subtotal.toFixed(2);
+    document.getElementById("tax").innerText =
+        tax.toFixed(2);
 
-document.getElementById(
-"tax"
-).innerText =
-tax.toFixed(2);
-
-document.getElementById(
-"total"
-).innerText =
-grandTotal.toFixed(2);
-
+    document.getElementById("total").innerText =
+        grandTotal.toFixed(2);
 }
+
+/* =========================
+   PDF
+========================= */
 
 function generatePDF(){
-  saveCustomer();
-const logo =
-document.getElementById("logo");
 
-doc.addImage(
-logo,
-"PNG",
-15,
-10,
-40,
-20
-);
-updateTotals();
+    saveCustomer();
 
-const { jsPDF } =
-window.jspdf;
+    updateTotals();
 
-const doc =
-new jsPDF();
+    const { jsPDF } =
+        window.jspdf;
 
-const invoiceNo =
-getInvoiceNumber();
+    const doc =
+        new jsPDF();
 
-const today =
-new Date().toLocaleDateString();
+    const invoiceNo =
+        getInvoiceNumber();
 
-doc.setFontSize(18);
-doc.text("FACTURE",90,20);
+    const today =
+        new Date().toLocaleDateString();
 
-doc.setFontSize(11);
+    const company =
+        JSON.parse(
+            localStorage.getItem("company")
+        ) || {};
 
-doc.text(
-COMPANY.name,
-20,
-40
-);
+    doc.setFontSize(18);
+    doc.text("FACTURE", 90, 20);
 
-doc.text(
-"ICE : " + COMPANY.ice,
-20,
-48
-);
+    doc.setFontSize(11);
 
-doc.text(
-"Adresse : " + COMPANY.address,
-20,
-56
-);
+    doc.text(
+        company.name || "",
+        20,
+        40
+    );
 
-doc.text(
-"Contact : " + COMPANY.contact,
-20,
-64
-);
+    doc.text(
+        "ICE : " + (company.ice || ""),
+        20,
+        48
+    );
 
-doc.text(
-"Facture N° : " + invoiceNo,
-130,
-40
-);
+    doc.text(
+        "Adresse : " + (company.address || ""),
+        20,
+        56
+    );
 
-doc.text(
-"Date : " + today,
-130,
-48
-);
+    doc.text(
+        "Contact : " + (company.contact || ""),
+        20,
+        64
+    );
 
-doc.text(
-"Client : " +
-document.getElementById("customer").value,
-20,
-80
-);
+    doc.text(
+        "Facture N° : " + invoiceNo,
+        130,
+        40
+    );
 
-doc.text(
-"ICE : " +
-document.getElementById("ice").value,
-20,
-88
-);
+    doc.text(
+        "Date : " + today,
+        130,
+        48
+    );
 
-doc.text(
-"Adresse : " +
-document.getElementById("address").value,
-20,
-96
-);
+    doc.text(
+        "Client : " +
+        document.getElementById("customer").value,
+        20,
+        80
+    );
 
-doc.text(
-"Contact : " +
-document.getElementById("contact").value,
-20,
-104
-);
+    doc.text(
+        "ICE : " +
+        document.getElementById("ice").value,
+        20,
+        88
+    );
 
-const rows = [];
+    doc.text(
+        "Adresse : " +
+        document.getElementById("address").value,
+        20,
+        96
+    );
 
-let subtotal = 0;
+    doc.text(
+        "Contact : " +
+        document.getElementById("contact").value,
+        20,
+        104
+    );
 
-document
-.querySelectorAll("#productsBody tr")
-.forEach(row=>{
+    const rows = [];
+    let subtotal = 0;
 
-const product =
-row.querySelector(".product").value;
+    document
+        .querySelectorAll("#productsBody tr")
+        .forEach(row => {
 
-const qty =
-Number(
-row.querySelector(".qty").value
-);
+            const product =
+                row.querySelector(".product").value;
 
-const price =
-Number(
-row.querySelector(".price").value
-);
+            const qty =
+                Number(
+                    row.querySelector(".qty").value
+                );
 
-const total =
-qty * price;
+            const price =
+                Number(
+                    row.querySelector(".price").value
+                );
 
-subtotal += total;
+            const total =
+                qty * price;
 
-rows.push([
-product,
-qty,
-price.toFixed(2),
-total.toFixed(2)
-]);
+            subtotal += total;
 
-});
+            rows.push([
+                product,
+                qty,
+                price.toFixed(2),
+                total.toFixed(2)
+            ]);
+        });
 
-doc.autoTable({
+    doc.autoTable({
+        startY:115,
+        head:[[
+            "Produit",
+            "Quantité",
+            "Prix Unitaire",
+            "Total HT"
+        ]],
+        body:rows
+    });
 
-startY:115,
+    const tax =
+        subtotal * 0.20;
 
-head:[[
-"Produit",
-"Quantité",
-"Prix Unitaire",
-"Total HT"
-]],
+    const ttc =
+        subtotal + tax;
 
-body:rows
+    let y =
+        doc.lastAutoTable.finalY + 15;
 
-});
+    doc.text(
+        "Montant HT : " +
+        subtotal.toFixed(2) +
+        " DH",
+        130,
+        y
+    );
 
-const tax =
-subtotal * 0.20;
+    y += 10;
 
-const ttc =
-subtotal + tax;
+    doc.text(
+        "TVA (20%) : " +
+        tax.toFixed(2) +
+        " DH",
+        130,
+        y
+    );
 
-let y =
-doc.lastAutoTable.finalY + 15;
+    y += 10;
 
-doc.text(
-"Montant HT : " +
-subtotal.toFixed(2) +
-" DH",
-130,
-y
-);
+    doc.text(
+        "Montant TTC : " +
+        ttc.toFixed(2) +
+        " DH",
+        130,
+        y
+    );
 
-y += 10;
-
-doc.text(
-"TVA (20%) : " +
-tax.toFixed(2) +
-" DH",
-130,
-y
-);
-
-y += 10;
-
-doc.text(
-"Montant TTC : " +
-ttc.toFixed(2) +
-" DH",
-130,
-y
-);
-
-doc.save(
-`Facture-${invoiceNo}.pdf`
-);
-
+    doc.save(
+        `Facture-${invoiceNo}.pdf`
+    );
 }
 
+/* =========================
+   STARTUP
+========================= */
+
+loadCompany();
+loadCustomers();
 addRow();
 
 </script>
 
 </body>
-
 </html>
