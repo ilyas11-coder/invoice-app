@@ -66,12 +66,108 @@ padding:5px 10px;
 </head>
 
 <body>
+  <img id="logo" src="logo.png" style="display:none;">
 
 <h1>Create Invoice</h1>
+  <h3>Company Information</h3>
+
+<input id="companyName" placeholder="Company Name">
+<input id="companyIce" placeholder="ICE">
+<input id="companyAddress" placeholder="Address">
+<input id="companyContact" placeholder="Contact">
+
+<button onclick="saveCompany()">
+Save Company Settings
+</button>
+  function saveCompany() {
+
+  localStorage.setItem(
+    "company",
+    JSON.stringify({
+      name: document.getElementById("companyName").value,
+      ice: document.getElementById("companyIce").value,
+      address: document.getElementById("companyAddress").value,
+      contact: document.getElementById("companyContact").value
+    })
+  );
+
+  alert("Company saved");
+}
+
+function loadCompany() {
+
+  const company =
+    JSON.parse(
+      localStorage.getItem("company")
+    );
+
+  if(!company) return;
+
+  document.getElementById("companyName").value = company.name || "";
+  document.getElementById("companyIce").value = company.ice || "";
+  document.getElementById("companyAddress").value = company.address || "";
+  document.getElementById("companyContact").value = company.contact || "";
+}
+  loadCompany();
+  
 
 <h3>Customer Information</h3>
 
-<input id="customer" placeholder="Customer Name">
+<input list="customers" id="customer" placeholder="Customer Name">
+
+<datalist id="customers"></datalist>
+  function saveCustomer() {
+
+  const customer = {
+    name: document.getElementById("customer").value,
+    ice: document.getElementById("ice").value,
+    address: document.getElementById("address").value,
+    contact: document.getElementById("contact").value
+  };
+
+  let customers =
+    JSON.parse(
+      localStorage.getItem("customers")
+    ) || [];
+
+  const exists =
+    customers.some(
+      c => c.name === customer.name
+    );
+
+  if(!exists){
+    customers.push(customer);
+
+    localStorage.setItem(
+      "customers",
+      JSON.stringify(customers)
+    );
+  }
+}
+  function loadCustomers() {
+
+  const list =
+    document.getElementById("customers");
+
+  list.innerHTML = "";
+
+  const customers =
+    JSON.parse(
+      localStorage.getItem("customers")
+    ) || [];
+
+  customers.forEach(c => {
+
+    const option =
+      document.createElement("option");
+
+    option.value = c.name;
+
+    list.appendChild(option);
+  });
+}
+  loadCustomers();
+  
 
 <br><br>
 
@@ -268,7 +364,18 @@ grandTotal.toFixed(2);
 }
 
 function generatePDF(){
+  saveCustomer();
+const logo =
+document.getElementById("logo");
 
+doc.addImage(
+logo,
+"PNG",
+15,
+10,
+40,
+20
+);
 updateTotals();
 
 const { jsPDF } =
@@ -439,9 +546,8 @@ ttc.toFixed(2) +
 y
 );
 
-window.open(
-doc.output("bloburl"),
-"_blank"
+doc.save(
+`Facture-${invoiceNo}.pdf`
 );
 
 }
